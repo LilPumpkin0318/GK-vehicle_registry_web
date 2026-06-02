@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>进厂车辆信息登记</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+    <main class="shell">
+      <section id="auth-screen" class="screen">
+        <div class="auth-copy">
+          <div class="brand-mark">工厂提货登记</div>
+          <h1>把提货信息收得整整齐齐</h1>
+          <p>
+            登录后即可登记来厂提货车辆信息，支持批量拆分、自动填表和个人历史记录查看。
+          </p>
+          <ul class="feature-list">
+            <li>提货日期、合同号、车牌号、司机信息一次录入</li>
+            <li>上方粘贴多车信息，支持用 `//` 分割自动拆分</li>
+            <li>每个用户只看到自己的提交记录</li>
+          </ul>
+        </div>
+
+        <form id="login-form" class="card auth-card">
+          <div class="card-head">
+            <h2>登录 / 首次登录自动建号</h2>
+            <p>建议先用一个固定账号试运行，例如 `admin` / `admin123`。</p>
+          </div>
+
+          <label class="field">
+            <span>用户名</span>
+            <input id="username-input" name="username" autocomplete="username" placeholder="请输入用户名" />
+          </label>
+
+          <label class="field">
+            <span>密码</span>
+            <input id="password-input" name="password" type="password" autocomplete="current-password" placeholder="请输入密码" />
+          </label>
+
+          <label class="field">
+            <span>显示名称</span>
+            <input id="display-name-input" name="displayName" autocomplete="nickname" placeholder="可选，默认与用户名一致" />
+          </label>
+
+          <button class="primary-btn" type="submit">进入系统</button>
+          <p id="login-hint" class="hint">登录成功后，提货公司字段会默认带出你的名称。</p>
+        </form>
+      </section>
+
+      <section id="app-screen" class="screen hidden">
+        <header class="topbar">
+          <div>
+            <div class="brand-mark">工厂提货登记</div>
+            <h2>车辆信息登记台</h2>
+          </div>
+          <div class="topbar-actions">
+            <div class="user-chip">
+              <span class="user-dot"></span>
+              <span id="user-label">未登录</span>
+            </div>
+            <button id="logout-btn" class="ghost-btn" type="button">退出登录</button>
+          </div>
+        </header>
+
+        <section class="stats-row">
+          <article class="stat-card">
+            <span class="stat-label">当前用户</span>
+            <strong id="stat-user">-</strong>
+          </article>
+          <article class="stat-card">
+            <span class="stat-label">今日已录入</span>
+            <strong id="stat-count">0</strong>
+          </article>
+          <article class="stat-card">
+            <span class="stat-label">智能识别状态</span>
+            <strong id="stat-parser">待输入文本</strong>
+          </article>
+        </section>
+
+        <section class="content-grid">
+          <form id="record-form" class="card main-card">
+            <div class="card-head">
+              <h2>提货登记</h2>
+              <p>先粘贴原始信息，系统会尽量自动拆解；也可以直接手动新增多个车辆表单。</p>
+            </div>
+
+            <div class="parser-box">
+              <label class="field">
+                <span>粘贴提货车辆信息</span>
+                <textarea
+                  id="source-text"
+                  rows="8"
+                  placeholder="每辆车一段，用 // 分割。例如：提货日期2026年6月1日，提货公司：XX贸易，合同号HT20260601，车牌号浙A12345，司机张三，身份证号，手机号，货物碳锰，提货吨位33.5吨 // 另一辆车的信息..."
+                ></textarea>
+              </label>
+
+              <div class="parser-actions">
+                <button id="parse-btn" class="secondary-btn" type="button">智能拆分并填表</button>
+                <button id="clear-btn" class="ghost-btn" type="button">清空文本</button>
+              </div>
+
+              <div id="parser-feedback" class="feedback">把车辆信息粘贴进来后，系统会自动拆分成多个表单。</div>
+            </div>
+
+            <div class="shared-panel">
+              <div class="panel-head">
+                <div>
+                  <h3>共享信息</h3>
+                  <p>多个车辆默认共用同一个日期、公司抬头和合同号。</p>
+                </div>
+                <button id="fill-company-btn" class="ghost-btn" type="button">用当前用户填充公司名</button>
+              </div>
+
+              <div class="form-grid shared-grid">
+                <label class="field">
+                  <span>提货日期</span>
+                  <input id="deliveryDate" name="deliveryDate" type="date" />
+                </label>
+
+                <label class="field">
+                  <span>提货公司</span>
+                  <input id="companyName" name="companyName" type="text" placeholder="默认使用用户名" />
+                </label>
+
+                <label class="field">
+                  <span>合同号</span>
+                  <input id="contractNo" name="contractNo" type="text" placeholder="请输入合同号" />
+                </label>
+              </div>
+            </div>
+
+            <div class="vehicle-panel">
+              <div class="panel-head">
+                <div>
+                  <h3>车辆表单预览</h3>
+                  <p>每个表单对应一个车号，支持手动新增，也支持从上方批量拆分。</p>
+                </div>
+                <button id="add-vehicle-btn" class="secondary-btn" type="button">新增提货车辆</button>
+              </div>
+
+              <div id="vehicle-list" class="vehicle-list"></div>
+            </div>
+
+            <div class="form-actions submit-actions">
+              <button class="primary-btn" type="submit">提交全部车辆</button>
+            </div>
+          </form>
+
+          <aside class="card side-card">
+            <div class="card-head">
+              <h2>我的提交记录</h2>
+              <p>仅显示日期、合同号和车牌号。</p>
+            </div>
+
+            <label class="field search-field">
+              <span>筛选记录</span>
+              <input id="record-filter" type="search" placeholder="按合同号 / 车牌号搜索" />
+            </label>
+
+            <div id="record-list" class="record-list"></div>
+          </aside>
+        </section>
+      </section>
+    </main>
+
+    <template id="vehicle-template">
+      <article class="vehicle-card">
+        <div class="vehicle-head">
+          <div class="vehicle-title"></div>
+          <button type="button" class="ghost-btn vehicle-remove">删除</button>
+        </div>
+
+        <div class="form-grid vehicle-grid">
+          <label class="field span-2">
+            <span>车牌号</span>
+            <input data-field="plateNo" type="text" placeholder="例如：浙A12345" />
+          </label>
+
+          <label class="field">
+            <span>司机姓名</span>
+            <input data-field="driverName" type="text" placeholder="请输入司机姓名" />
+          </label>
+
+          <label class="field">
+            <span>司机身份证号</span>
+            <input data-field="driverIdNo" type="text" placeholder="18 位身份证号" />
+          </label>
+
+          <label class="field">
+            <span>司机电话号码</span>
+            <input data-field="driverPhone" type="tel" placeholder="11 位手机号" />
+          </label>
+
+          <label class="field">
+            <span>货物品类</span>
+            <select data-field="cargoCategory">
+              <option value="">请选择</option>
+              <option value="碳锰">碳锰</option>
+              <option value="硅锰">硅锰</option>
+              <option value="其它">其它</option>
+            </select>
+          </label>
+
+          <label class="field span-2">
+            <span>提货吨位</span>
+            <input data-field="tonnage" type="number" step="0.01" min="0" placeholder="请输入吨位" />
+          </label>
+
+          <label class="field span-2">
+            <span>备注</span>
+            <textarea data-field="remarks" rows="2" placeholder="可留空，填写补充说明"></textarea>
+          </label>
+        </div>
+      </article>
+    </template>
+
+    <template id="record-template">
+      <article class="record-item">
+        <div class="record-main">
+          <div class="record-title"></div>
+        </div>
+      </article>
+    </template>
+
+    <script src="/main.js" type="module"></script>
+  </body>
+</html>
