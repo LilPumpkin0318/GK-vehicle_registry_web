@@ -1,0 +1,37 @@
+{
+  "admin": {
+    "username": "admin",
+    "displayName": "admin",
+    "role": "admin",
+    "passwordHash": "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
+    "createdAt": "2026-06-03T15:15:00+08:00"
+  },
+  "customerA": {
+    "username": "customerA",
+    "displayName": "东和润溢",
+    "role": "user",
+    "passwordHash": "ef797c8118f02dfb649607dd5d3f8c7623048c9c063d532cc95c5ed7a898a64f",
+    "createdAt": "2026-06-03T07:16:58.137Z"
+  },
+  "customerB": {
+    "username": "customerB",
+    "displayName": "厦门国贸",
+    "role": "user",
+    "passwordHash": "ef797c8118f02dfb649607dd5d3f8c7623048c9c063d532cc95c5ed7a898a64f",
+    "createdAt": "2026-06-03T08:05:19.446Z"
+  },
+  "customerC": {
+    "username": "customerC",
+    "displayName": "浙江冶金",
+    "role": "user",
+    "passwordHash": "ef797c8118f02dfb649607dd5d3f8c7623048c9c063d532cc95c5ed7a898a64f",
+    "createdAt": "2026-06-03T08:05:32.055Z"
+  },
+  "customerD": {
+    "username": "customerD",
+    "displayName": "乌江新材",
+    "role": "user",
+    "passwordHash": "ef797c8118f02dfb649607dd5d3f8c7623048c9c063d532cc95c5ed7a898a64f",
+    "createdAt": "2026-06-03T08:09:46.146Z"
+  }
+}
