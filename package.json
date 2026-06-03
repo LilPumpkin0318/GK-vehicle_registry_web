@@ -1,0 +1,10 @@
+{
+  "name": "factory-vehicle-registry-web",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Factory pickup vehicle registration web app with local login, smart text parsing, and personal record history.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
