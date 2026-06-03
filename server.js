@@ -34,6 +34,7 @@ async function ensureStore() {
       admin: {
         username: 'admin',
         displayName: 'admin',
+        role: 'admin',
         passwordHash: hashPassword('admin123'),
         createdAt: new Date().toISOString()
       }
@@ -141,6 +142,7 @@ async function getSessionUser(req) {
   return {
     username: user.username,
     displayName: user.displayName || user.username,
+    role: user.role || (user.username === 'admin' ? 'admin' : 'user'),
     createdAt: user.createdAt
   };
 }
@@ -235,9 +237,10 @@ function extractPlateNumbersRobust(text) {
 }
 
 function normalizeVehicleRows(body, user) {
+  const isNormalUser = user && user.role !== 'admin';
   const shared = {
     deliveryDate: normalizeDateInputLocal(body.deliveryDate) || todayIsoDateLocal(),
-    companyName: String(body.companyName ?? '').trim() || user.displayName || user.username,
+    companyName: isNormalUser ? (user.displayName || user.username) : (String(body.companyName ?? '').trim() || user.displayName || user.username),
     contractNo: String(body.contractNo ?? '').trim()
   };
 
@@ -268,7 +271,8 @@ function normalizeVehicleRows(body, user) {
         tonnage: Number(vehicle?.tonnage ?? fallbackVehicle.tonnage),
         remarks: String(vehicle?.remarks ?? fallbackVehicle.remarks).trim(),
         ownerUsername: user.username,
-        ownerDisplayName: user.displayName
+        ownerDisplayName: user.displayName,
+        confirmation: String(vehicle?.confirmation ?? '').trim()
       };
     })
     .filter((vehicle) => String(vehicle.plateNo ?? '').trim());
@@ -316,28 +320,23 @@ async function handleLogin(req, res) {
   const body = await parseBody(req);
   const username = String(body.username ?? '').trim();
   const password = String(body.password ?? '');
-  const displayName = String(body.displayName ?? '').trim() || username;
+  const displayNameInput = String(body.displayName ?? '').trim();
+  const users = await readJson(FILES.users, {});
+  const existing = users[username];
+  const displayName = displayNameInput || existing?.displayName || username;
 
   if (!username || !password) {
     return sendJson(res, 400, { error: '请输入用户名和密码。' });
   }
 
-  const users = await readJson(FILES.users, {});
-  const existing = users[username];
   const passwordHash = hashPassword(password);
 
   if (!existing) {
-    users[username] = {
-      username,
-      displayName,
-      passwordHash,
-      createdAt: new Date().toISOString()
-    };
-    await writeJson(FILES.users, users);
+    return sendJson(res, 401, { error: '用户不存在，请联系管理员创建账号。' });
   } else if (existing.passwordHash !== passwordHash) {
     return sendJson(res, 401, { error: '用户名或密码不正确。' });
-  } else if (displayName && displayName !== existing.displayName) {
-    existing.displayName = displayName;
+  } else if (displayNameInput && displayNameInput !== existing.displayName) {
+    existing.displayName = displayNameInput;
     await writeJson(FILES.users, users);
   }
 
@@ -357,7 +356,8 @@ async function handleLogin(req, res) {
   res.end(JSON.stringify({
     user: {
       username,
-      displayName: users[username].displayName || username
+      displayName: users[username].displayName || username,
+      role: users[username].role || (username === 'admin' ? 'admin' : 'user')
     }
   }));
 }
@@ -451,6 +451,156 @@ async function handleCreateRecord(req, res) {
   });
 }
 
+async function getAdminUser(req) {
+  const user = await getSessionUser(req);
+  if (!user) return null;
+  if (user.role === 'admin' || user.username === 'admin') {
+    return user;
+  }
+  return null;
+}
+
+async function handleAdminGetUsers(req, res) {
+  const admin = await getAdminUser(req);
+  if (!admin) return sendJson(res, 403, { error: '权限不足。' });
+
+  const users = await readJson(FILES.users, {});
+  const list = Object.values(users).map(u => ({
+    username: u.username,
+    displayName: u.displayName || u.username,
+    role: u.role || (u.username === 'admin' ? 'admin' : 'user'),
+    createdAt: u.createdAt
+  }));
+  return sendJson(res, 200, { users: list });
+}
+
+async function handleAdminCreateUser(req, res) {
+  const admin = await getAdminUser(req);
+  if (!admin) return sendJson(res, 403, { error: '权限不足。' });
+
+  const body = await parseBody(req);
+  const username = String(body.username ?? '').trim();
+  const password = String(body.password ?? '');
+  const displayName = String(body.displayName ?? '').trim() || username;
+  const role = String(body.role ?? 'user').trim();
+
+  if (!username || !password) {
+    return sendJson(res, 400, { error: '请输入用户名和密码。' });
+  }
+
+  const users = await readJson(FILES.users, {});
+  if (users[username]) {
+    return sendJson(res, 400, { error: '用户已存在。' });
+  }
+
+  users[username] = {
+    username,
+    displayName,
+    role,
+    passwordHash: hashPassword(password),
+    createdAt: new Date().toISOString()
+  };
+  await writeJson(FILES.users, users);
+
+  return sendJson(res, 201, {
+    user: {
+      username,
+      displayName,
+      role
+    }
+  });
+}
+
+async function handleAdminResetPassword(req, res) {
+  const admin = await getAdminUser(req);
+  if (!admin) return sendJson(res, 403, { error: '权限不足。' });
+
+  const body = await parseBody(req);
+  const username = String(body.username ?? '').trim();
+  const newPassword = String(body.newPassword ?? '');
+
+  if (!username || !newPassword) {
+    return sendJson(res, 400, { error: '请输入用户名和新密码。' });
+  }
+
+  const users = await readJson(FILES.users, {});
+  if (!users[username]) {
+    return sendJson(res, 400, { error: '用户不存在。' });
+  }
+
+  users[username].passwordHash = hashPassword(newPassword);
+  await writeJson(FILES.users, users);
+
+  return sendJson(res, 200, { ok: true });
+}
+
+async function handleAdminDeleteUser(req, res) {
+  const admin = await getAdminUser(req);
+  if (!admin) return sendJson(res, 403, { error: '权限不足。' });
+
+  const body = await parseBody(req);
+  const username = String(body.username ?? '').trim();
+
+  if (!username) {
+    return sendJson(res, 400, { error: '请输入要删除的用户名。' });
+  }
+
+  if (username === 'admin') {
+    return sendJson(res, 400, { error: '无法删除默认管理员账号。' });
+  }
+
+  const users = await readJson(FILES.users, {});
+  if (!users[username]) {
+    return sendJson(res, 400, { error: '用户不存在。' });
+  }
+
+  delete users[username];
+  await writeJson(FILES.users, users);
+
+  const sessions = await readJson(FILES.sessions, {});
+  for (const token of Object.keys(sessions)) {
+    if (sessions[token].username === username) {
+      delete sessions[token];
+    }
+  }
+  await writeJson(FILES.sessions, sessions);
+
+  return sendJson(res, 200, { ok: true });
+}
+
+async function handleAdminGetRecords(req, res) {
+  const admin = await getAdminUser(req);
+  if (!admin) return sendJson(res, 403, { error: '权限不足。' });
+
+  const records = await readJson(FILES.records, []);
+  const sorted = records.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  return sendJson(res, 200, { records: sorted });
+}
+
+async function handleAdminConfirmRecord(req, res) {
+  const admin = await getAdminUser(req);
+  if (!admin) return sendJson(res, 403, { error: '权限不足。' });
+
+  const body = await parseBody(req);
+  const recordId = String(body.recordId ?? '').trim();
+
+  if (!recordId) {
+    return sendJson(res, 400, { error: '缺少记录 ID。' });
+  }
+
+  const records = await readJson(FILES.records, []);
+  const record = records.find(r => r.id === recordId);
+
+  if (!record) {
+    return sendJson(res, 404, { error: '找不到对应的车辆记录。' });
+  }
+
+  record.confirmation = 'confirmed';
+  await writeJson(FILES.records, records);
+
+  return sendJson(res, 200, { record });
+}
+
 async function serveStatic(req, res, pathname) {
   const safePath = pathname === '/' ? '/index.html' : pathname;
   const filePath = path.normalize(path.join(PUBLIC_DIR, safePath));
@@ -506,6 +656,31 @@ async function router(req, res) {
 
   if (req.method === 'POST' && pathname === '/api/records') {
     return handleCreateRecord(req, res);
+  }
+
+  // Admin routes
+  if (req.method === 'GET' && pathname === '/api/admin/users') {
+    return handleAdminGetUsers(req, res);
+  }
+
+  if (req.method === 'POST' && pathname === '/api/admin/users/create') {
+    return handleAdminCreateUser(req, res);
+  }
+
+  if (req.method === 'POST' && pathname === '/api/admin/users/reset-password') {
+    return handleAdminResetPassword(req, res);
+  }
+
+  if (req.method === 'POST' && pathname === '/api/admin/users/delete') {
+    return handleAdminDeleteUser(req, res);
+  }
+
+  if (req.method === 'GET' && pathname === '/api/admin/records') {
+    return handleAdminGetRecords(req, res);
+  }
+
+  if (req.method === 'POST' && pathname === '/api/admin/records/confirm') {
+    return handleAdminConfirmRecord(req, res);
   }
 
   if (req.method === 'GET' && pathname.startsWith('/api/')) {

@@ -343,6 +343,7 @@ textarea:focus {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
+  margin-bottom: 20px;
 }
 
 .stat-card {
@@ -499,6 +500,24 @@ textarea:focus {
   gap: 8px;
 }
 
+/* Grouped record styling */
+.record-group-header {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+.record-plate-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+}
+.record-plate-no {
+  font-weight: 500;
+  color: #1e293b;
+}
+
 .record-title {
   font-weight: 700;
   color: #0f172a;
@@ -623,3 +642,296 @@ textarea:focus {
     max-width: 11ch;
   }
 }
+
+/* ==========================================================================
+   管理员后台专用样式 (Admin Control Panel Styles)
+   ========================================================================== */
+
+.admin-nav {
+  display: flex;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.04);
+  padding: 6px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  margin-bottom: 12px;
+}
+
+.nav-tab {
+  flex: 1;
+  text-align: center;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.94rem;
+  background: transparent;
+  color: var(--muted);
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.nav-tab:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.nav-tab.active {
+  background: var(--surface-strong);
+  color: var(--accent-strong);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+}
+
+.admin-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 14px;
+}
+
+.admin-card-head h2 {
+  margin: 0;
+}
+
+.admin-card-head p {
+  margin: 4px 0 0 0;
+}
+
+.filter-bar {
+  display: flex;
+  gap: 4px;
+  background: rgba(15, 23, 42, 0.04);
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+}
+
+.filter-tab {
+  padding: 6px 14px;
+  border-radius: 7px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.filter-tab:hover {
+  color: var(--text);
+}
+
+.filter-tab.active {
+  background: var(--surface-strong);
+  color: var(--accent-strong);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+}
+
+.admin-record-list {
+  display: grid;
+  gap: 16px;
+  max-height: 720px;
+  overflow-y: auto;
+  padding-right: 6px;
+  margin-top: 16px;
+}
+
+.admin-record-card {
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-record-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.06);
+}
+
+.admin-record-card.confirmed-card {
+  border-left: 5px solid #10b981;
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.admin-record-card.pending-card {
+  border-left: 5px solid #f59e0b;
+}
+
+.admin-record-meta-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 10px;
+}
+
+.admin-record-user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+.admin-record-user-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #3b82f6;
+}
+
+.admin-record-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.admin-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-detail-label {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.admin-detail-value {
+  font-size: 0.94rem;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.admin-record-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  border-top: 1px dashed var(--line);
+  padding-top: 12px;
+}
+
+.admin-sub-form {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border-radius: var(--radius-md);
+  background: rgba(15, 23, 42, 0.02);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  margin-top: 16px;
+}
+
+.admin-sub-form h3 {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+}
+
+.divider {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 22px 0;
+}
+
+.user-list-section h3 {
+  margin: 0 0 12px;
+  font-size: 1.05rem;
+}
+
+.admin-user-list {
+  display: grid;
+  gap: 8px;
+  max-height: 720px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.user-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-strong);
+  border: 1px solid var(--line);
+  transition: all 0.2s ease;
+}
+
+.user-item:hover {
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+}
+
+.user-info-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.user-name-label {
+  font-weight: 700;
+  font-size: 0.94rem;
+}
+
+.user-role-badge {
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.user-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.user-action-btn {
+  font-size: 0.8rem;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-weight: 700;
+  background: rgba(15, 23, 42, 0.04);
+  color: var(--text);
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.user-action-btn:hover {
+  background: rgba(15, 23, 42, 0.08);
+}
+
+.user-action-btn.btn-delete {
+  background: rgba(220, 38, 38, 0.08);
+  color: var(--danger);
+}
+
+.user-action-btn.btn-delete:hover {
+  background: rgba(220, 38, 38, 0.16);
+}
+
+.badge-success {
+  background: rgba(16, 185, 129, 0.12);
+  color: #065f46;
+}
+
+.badge-warning {
+  background: rgba(245, 158, 11, 0.12);
+  color: #92400e;
+}
+
+@media (max-width: 1120px) {
+  .admin-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
